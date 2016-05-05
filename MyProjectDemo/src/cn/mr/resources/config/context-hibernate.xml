@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop"
+  xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+  xmlns:cache="http://www.springframework.org/schema/cache" xmlns:p="http://www.springframework.org/schema/p"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans 
+     http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+     http://www.springframework.org/schema/aop
+     http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+     http://www.springframework.org/schema/context
+     http://www.springframework.org/schema/context/spring-context-4.2.xsd
+     http://www.springframework.org/schema/tx
+     http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+     http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-4.2.xsd">
+      
+      <!-- 引入properties文件 -->
+      <context:property-placeholder location="classpath:/cn/mr/resources/properties/jdbc.properties" ignore-unresolvable="true"/>
+      
+      <!-- 使用Spring组件扫描的方式来实现自动注入bean -->
+      <context:component-scan base-package="cn.mr.common.hibernate, cn.mr.common.service"/>
+  
+      <!-- 配置数据源，定义数据库连接池数据源bean destroy-method="close"的作用是当数据库连接不使用的时候,就把该连接重新放到数据池中,方便下次使用调用 -->
+      <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <!-- 配置连接池的初始值 -->
+		<property name="initialSize" value="1" />
+		<!-- 连接池的最大值 -->
+        <property name="maxActive" value="20"/>
+        <!-- 最大空闲时，当经过一个高峰之后，连接池可以将一些用不到的连接释放，一直减少到maxIdle为止 -->
+        <property name="maxIdle" value="5"/>
+        <!-- 当最小空闲时，当连接少于minIdle时会自动去申请一些连接 -->
+        <property name="minIdle" value="1" />
+        <property name="maxWait" value="5000"/>
+      </bean>
+      
+      <!-- 配置session，如果使用的是Annotation的方式，不能使用LocalSessionFactoryBean,而应该使用AnnotationSessionFactoryBean -->
+      <bean id="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 设置Spring取那个包中查找相应的实体类 -->
+        <property name="packagesToScan" value="cn.mr.common.model"/>
+        <property name="hibernateProperties">
+          <props>
+            <!--SQL方言  -->  
+            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+            <!--显示实际操作数据库时的SQL语句  -->  
+            <prop key="hibernate.show_sql">false</prop>
+            <!-- 自动更新数据库表结构 -->  
+            <prop key="hibernate.hbm2ddl.auto">create</prop>
+            <!-- 格式化sql -->
+            <prop key="hibernate.format_sql">false</prop>
+            <!-- 如果开启, Hibernate将在SQL中生成有助于调试的注释信息, 默认值为false. 取值 true | false  -->
+            <prop key="hibernate.use_sql_comments">true</prop>
+          </props>
+        </property>
+      </bean>
+      
+      <!-- 定义事务管理 -->
+	  <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+	    <property name="sessionFactory" ref="sessionFactory" />
+	  </bean>
+	  
+	  <!-- 使用annotation定义事务 -->
+      <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+</beans>

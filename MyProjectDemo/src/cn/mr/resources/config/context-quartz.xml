@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans-4.2.xsd">
+
+	<!-- 动态生成定时任务 -->
+	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<!-- 用spring配置的数据源 -->
+		<property name="dataSource" ref="dataSource"></property> <!-- 注入spring容器 -->       
+		<property name="applicationContextSchedulerContextKey" value="applicationContextKey"></property>
+		<property name="configLocation" value="classpath:cn/mr/resources/properties/quartz.properties"></property>
+	</bean>
+</beans>
